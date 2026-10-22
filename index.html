@@ -3,494 +3,528 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CyberLab: Cipher & Cryptanalysis Suite</title>
+    <title>Bombe M3: Mechanical Cryptanalysis Bank</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600;700&family=Inter:wght@400;600;800&display=swap');
-
+        @import url('https://fonts.googleapis.com/css2?family=Special+Elite&family=Fira+Code:wght@400;700&display=swap');
+        
         :root {
-            --bg-dark: #0a0c10;
-            --panel-bg: #12161f;
-            --border-color: #222938;
-            --accent-green: #00ff66;
-            --accent-cyan: #00e5ff;
-            --accent-red: #ff3366;
-            --accent-gold: #ffb700;
-            --text-main: #e2e8f0;
-            --text-muted: #64748b;
+            --steel-dark: #1a1a1a;
+            --logic-green: #00ff41;
+            --lamp-glow: #ffcc00;
+            --brass: #c5a059;
+            --alert-red: #ff3333;
         }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            background-color: var(--bg-dark);
-            color: var(--text-main);
-            font-family: 'Inter', sans-serif;
+            background: #0d0d0d;
+            color: #ddd;
+            font-family: 'Special Elite', serif;
             display: flex;
             flex-direction: column;
             align-items: center;
-            min-height: 100vh;
+            padding: 15px;
+            margin: 0;
+        }
+
+        .chassis {
+            background: linear-gradient(145deg, #2a2a2a, #111);
+            border: 8px solid #000;
+            border-radius: 4px;
             padding: 20px;
+            width: 840px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+            position: relative;
+            box-sizing: border-box;
         }
 
-        header {
+        .header-title {
             text-align: center;
-            margin-bottom: 20px;
-        }
-
-        header h1 {
-            font-size: 26px;
-            font-weight: 800;
-            letter-spacing: 2px;
-            color: #fff;
+            color: var(--brass);
+            font-size: 20px;
+            letter-spacing: 3px;
+            margin: 0 0 15px 0;
             text-transform: uppercase;
+            border-bottom: 2px solid #222;
+            padding-bottom: 10px;
+            text-shadow: 0 2px 4px #000;
         }
 
-        header h1 span { color: var(--accent-cyan); }
-
-        header p {
-            font-size: 13px;
-            color: var(--text-muted);
-            margin-top: 4px;
-        }
-
-        /* TAB NAVIGATION */
-        .tab-nav {
-            display: flex;
-            gap: 10px;
+        /* MECHANICAL DRUM RACK */
+        .drum-rack-container {
+            background: #050505;
+            border: 2px solid #222;
+            padding: 15px;
+            border-radius: 4px;
             margin-bottom: 20px;
-            background: var(--panel-bg);
-            padding: 6px;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
+            box-shadow: inset 0 0 20px #000;
         }
 
-        .tab-btn {
-            background: transparent;
-            border: none;
-            color: var(--text-muted);
-            padding: 10px 20px;
-            font-size: 13px;
-            font-weight: 600;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            font-family: 'Inter', sans-serif;
-        }
-
-        .tab-btn.active {
-            background: var(--border-color);
-            color: #fff;
-        }
-
-        .tab-btn.active.green { color: var(--accent-green); }
-        .tab-btn.active.cyan { color: var(--accent-cyan); }
-
-        /* VIEW CONTAINERS */
-        .view-panel {
-            display: none;
-            width: 100%;
-            max-width: 900px;
-            background: var(--panel-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 25px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
-        }
-
-        .view-panel.active { display: block; }
-
-        /* ENIGMA TAB STYLES */
-        .rotor-rack {
-            display: flex;
-            justify-content: center;
-            gap: 25px;
-            margin-bottom: 25px;
-        }
-
-        .rotor-box {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .rotor-label {
+        .rack-label {
             font-size: 11px;
-            font-weight: 700;
-            color: var(--text-muted);
-            margin-bottom: 6px;
+            color: #777;
             text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+            text-align: center;
         }
 
-        .rotor-dial {
-            width: 60px;
-            height: 75px;
-            background: linear-gradient(180deg, #1e2538 0%, #0d111a 100%);
-            border: 2px solid var(--border-color);
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: 'Fira Code', monospace;
-            font-size: 32px;
-            font-weight: 700;
-            color: var(--accent-gold);
-            cursor: pointer;
-            user-select: none;
-            box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
-        }
-
-        .rotor-dial:hover { border-color: var(--accent-gold); }
-
-        .lamp-board {
+        .drum-grid {
             display: grid;
-            grid-template-columns: repeat(9, 1fr);
+            grid-template-columns: repeat(12, 1fr);
             gap: 8px;
-            margin-bottom: 25px;
+            justify-items: center;
         }
 
-        .lamp {
-            aspect-ratio: 1;
+        .drum-unit {
+            width: 52px;
+            height: 52px;
             border-radius: 50%;
-            background: #090c14;
-            border: 1px solid var(--border-color);
+            background: radial-gradient(circle at 35% 35%, #3a3a3a, #0a0a0a);
+            border: 2px solid #222;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-family: 'Fira Code', monospace;
-            font-size: 16px;
-            font-weight: 600;
-            color: #334155;
-            transition: all 0.1s ease;
+            position: relative;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.9);
+            transition: transform 0.05s linear;
         }
 
-        .lamp.lit {
-            background: var(--accent-gold);
-            color: #000;
-            box-shadow: 0 0 20px var(--accent-gold);
-            border-color: #fff;
+        .drum-unit::before {
+            content: "";
+            position: absolute;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            border: 1px dashed #444;
+            pointer-events: none;
         }
 
-        .tape-display {
-            background: #090c14;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            padding: 12px;
-            font-family: 'Fira Code', monospace;
-            font-size: 14px;
-            min-height: 45px;
-            margin-bottom: 12px;
-            word-break: break-all;
+        .drum-val {
+            font-size: 20px;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 0 0 5px var(--brass);
+            user-select: none;
         }
 
-        .tape-label {
-            font-size: 10px;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            margin-bottom: 4px;
-            font-weight: 700;
-        }
-
-        .tape-text { color: var(--accent-green); }
-
-        /* MODERN CRACKER STYLES */
-        .cracker-grid {
+        /* PANEL SPLIT */
+        .control-panels {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-
-        @media (max-width: 768px) { .cracker-grid { grid-template-columns: 1fr; } }
-
-        .input-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
+            gap: 15px;
             margin-bottom: 20px;
         }
 
-        .input-group label {
-            font-size: 12px;
-            font-weight: 700;
-            color: var(--text-muted);
+        .panel-box {
+            background: #050505;
+            padding: 15px;
+            border-radius: 4px;
+            border: 2px solid #222;
+            box-sizing: border-box;
+        }
+
+        .panel-title {
+            font-size: 11px;
+            color: #888;
+            letter-spacing: 1.5px;
+            margin-bottom: 10px;
             text-transform: uppercase;
         }
 
-        .input-group input {
-            background: #090c14;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            padding: 12px;
-            color: #fff;
+        input[type="text"] {
+            width: 100%;
+            background: #000;
+            color: var(--logic-green);
+            border: 1px solid #333;
+            padding: 10px;
             font-family: 'Fira Code', monospace;
-            font-size: 15px;
+            font-size: 13px;
+            box-sizing: border-box;
+            margin-bottom: 10px;
+            border-radius: 2px;
+            text-transform: uppercase;
             outline: none;
         }
 
-        .input-group input:focus { border-color: var(--accent-cyan); }
+        input[type="text"]:focus {
+            border-color: var(--logic-green);
+        }
 
-        .terminal {
-            background: #05070a;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            padding: 15px;
+        /* LOGIC MONITOR */
+        .logic-monitor {
+            background: #000;
+            border: 1px solid #333;
+            border-radius: 3px;
+            padding: 12px;
             font-family: 'Fira Code', monospace;
-            font-size: 12px;
-            color: var(--accent-cyan);
-            height: 220px;
+            font-size: 11px;
+            color: var(--logic-green);
+            border-left: 4px solid var(--logic-green);
+            line-height: 1.5;
+            height: 140px;
             overflow-y: auto;
-            line-height: 1.6;
+            white-space: pre-wrap;
+            box-shadow: inset 0 2px 6px #000;
         }
 
-        .stat-card {
-            background: #090c14;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 12px;
+        /* ODOMETER & STATUS */
+        .status-bay {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
 
-        .stat-card .val {
-            font-size: 22px;
-            font-weight: 800;
+        .odo-display {
+            background: #000;
+            color: var(--brass);
             font-family: 'Fira Code', monospace;
-            margin-top: 4px;
+            font-size: 36px;
+            font-weight: bold;
+            letter-spacing: 12px;
+            padding: 8px 20px;
+            border: 2px solid #333;
+            border-radius: 4px;
+            margin-bottom: 12px;
+            text-shadow: 0 0 10px rgba(197, 160, 89, 0.5);
+            box-shadow: inset 0 2px 8px #000;
         }
 
-        .val.red { color: var(--accent-red); }
-        .val.green { color: var(--accent-green); }
+        .stop-lamp {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #333, #050505);
+            border: 2px solid #111;
+            margin-bottom: 12px;
+            box-shadow: inset 0 4px 6px #000;
+            transition: all 0.2s ease;
+        }
 
-        .btn-action {
-            width: 100%;
-            background: var(--accent-cyan);
-            color: #000;
-            font-weight: 700;
-            border: none;
-            padding: 14px;
-            border-radius: 6px;
+        .stop-lamp.hit {
+            background: radial-gradient(circle at 30% 30%, #fff, var(--alert-red));
+            box-shadow: 0 0 30px var(--alert-red);
+            border-color: #fff;
+        }
+
+        /* TAPE READOUT */
+        .tape-readout {
+            background: #fdfae6;
+            color: #222;
+            padding: 8px 12px;
+            font-size: 15px;
+            letter-spacing: 3px;
+            border-radius: 2px;
+            min-height: 20px;
+            text-align: left;
+            margin-bottom: 15px;
+            border-left: 6px solid #34495e;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.2);
+            font-family: 'Special Elite', serif;
+            word-break: break-all;
+        }
+
+        /* CONTROLS */
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        button {
+            background: #2a2a2a;
+            color: #ccc;
+            border: 1px solid #444;
+            padding: 10px 18px;
+            border-radius: 2px;
             cursor: pointer;
-            font-size: 14px;
-            transition: opacity 0.2s;
-            font-family: 'Inter', sans-serif;
+            font-family: 'Special Elite', serif;
+            font-size: 11px;
+            transition: background 0.15s ease;
         }
 
-        .btn-action:hover { opacity: 0.9; }
-        .btn-action:disabled { background: var(--text-muted); cursor: not-allowed; }
+        button:hover {
+            background: #3a3a3a;
+            color: #fff;
+        }
+
+        .btn-run {
+            background: #7f1d1d;
+            border-color: #991b1b;
+            color: #fff;
+            font-weight: bold;
+        }
+
+        .btn-run:hover {
+            background: #991b1b;
+        }
     </style>
 </head>
-<body>
+<body onload="init()">
 
-    <header>
-        <h1>Cyber<span>Lab</span></h1>
-        <p>Grade 9/10 Technological Education & Encryption Inspector</p>
-    </header>
+    <div class="chassis">
+        <h1 class="header-title">Bombe M3: Mechanical Logic Bank</h1>
 
-    <div class="tab-nav">
-        <button class="tab-btn active cyan" onclick="switchTab('cracker')">Modern Password Cracker</button>
-        <button class="tab-btn green" onclick="switchTab('enigma')">Historical Enigma Machine</button>
-    </div>
-
-    <!-- TAB 1: MODERN PASSWORD CRACKER -->
-    <div id="view-cracker" class="view-panel active">
-        <div class="cracker-grid">
-            <div>
-                <div class="input-group">
-                    <label>Target Password / Passphrase</label>
-                    <input type="text" id="target-pass" value="shop2026" placeholder="Enter a password to test...">
-                </div>
-
-                <div class="input-group">
-                    <label>Attack Hardware Profile</label>
-                    <select id="hardware-profile" style="background:#090c14; color:#fff; border:1px solid var(--border-color); padding:12px; border-radius:6px; font-family:'Inter'; outline:none;">
-                        <option value="100000">School Chromebook (100k attempts/sec)</option>
-                        <option value="50000000">Single Gaming GPU (50M attempts/sec)</option>
-                        <option value="10000000000" selected>Dedicated Cyber Rig (10 Billion attempts/sec)</option>
-                    </select>
-                </div>
-
-                <button class="btn-action" id="crack-btn" onclick="startCracker()">Simulate Brute-Force Attack</button>
-            </div>
-
-            <div>
-                <div class="stat-card">
-                    <div class="tape-label">Estimated Time to Crack</div>
-                    <div class="val red" id="time-stat">0.00 Seconds</div>
-                </div>
-
-                <div class="stat-card">
-                    <div class="tape-label">Password Entropy</div>
-                    <div class="val green" id="entropy-stat">0 Bits</div>
-                </div>
-
-                <div class="terminal" id="term-out">
-                    > SYSTEM READY. Enter a password above to begin cryptanalysis...
-                </div>
-            </div>
+        <!-- DRUM RACK -->
+        <div class="drum-rack-container">
+            <div class="rack-label">ROTATING ROTOR COMMUTATOR BANKS (36 DRUMS)</div>
+            <div class="drum-grid" id="drum-grid"></div>
         </div>
-    </div>
 
-    <!-- TAB 2: HISTORICAL ENIGMA MACHINE -->
-    <div id="view-enigma" class="view-panel">
-        <div class="rotor-rack">
-            <div class="rotor-box">
-                <div class="rotor-label">Rotor I</div>
-                <div class="rotor-dial" id="r0" onclick="stepRotorManual(0)">A</div>
+        <!-- CONTROL & LOGIC PANELS -->
+        <div class="control-panels">
+            <!-- INPUT PANEL -->
+            <div class="panel-box">
+                <div class="panel-title">Intercept & Crib Input</div>
+                <label style="font-size: 10px; color: #666;">INTERCEPTED CIPHERTEXT:</label>
+                <input type="text" id="cipher-in" placeholder="e.g. ILBDA" value="ILBDA">
+                
+                <label style="font-size: 10px; color: #666;">ENGLISH CRIB (KNOWN WORD):</label>
+                <input type="text" id="crib-in" placeholder="e.g. HELLO" value="HELLO">
+
+                <div class="panel-title" style="margin-top: 5px;">Decrypted Message Tape</div>
+                <div id="output-tape" class="tape-readout" style="border-left-color: #b08d57;">WAITING...</div>
             </div>
-            <div class="rotor-box">
-                <div class="rotor-label">Rotor II</div>
-                <div class="rotor-dial" id="r1" onclick="stepRotorManual(1)">A</div>
-            </div>
-            <div class="rotor-box">
-                <div class="rotor-label">Rotor III</div>
-                <div class="rotor-dial" id="r2" onclick="stepRotorManual(2)">A</div>
+
+            <!-- LOGIC MONITOR & STATUS -->
+            <div class="panel-box style="display: flex; flex-direction: column;">
+                <div class="panel-title">Logical Deduction Trace</div>
+                <div class="logic-monitor" id="logic-box">> STANDBY: AWAITING MOTOR START COMMAND...</div>
             </div>
         </div>
 
-        <div class="lamp-board" id="lamp-board"></div>
+        <!-- MOTOR STATUS & BUTTONS -->
+        <div class="panel-box" style="margin-bottom: 20px; display: flex; justify-content: space-around; align-items: center;">
+            <div class="status-bay">
+                <div class="panel-title">CURRENT ROTOR POSITION</div>
+                <div class="odo-display" id="odo-display">A A A</div>
+            </div>
 
-        <div>
-            <div class="tape-label">Plaintext Input (Type on your keyboard)</div>
-            <div class="tape-display"><span class="tape-text" id="plain-tape"></span></div>
-            <div class="tape-label">Enigma Ciphertext Output</div>
-            <div class="tape-display"><span class="tape-text" id="cipher-tape" style="color: var(--accent-gold);"></span></div>
+            <div class="status-bay">
+                <div class="panel-title">CONTRADICTION STOP LAMP</div>
+                <div class="stop-lamp" id="stop-lamp"></div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn-run" id="run-btn" onclick="toggleBombe()">RUN BOMBE MOTOR</button>
+            <button onclick="stepOnePosition()">STEP SINGLE (+1)</button>
+            <button onclick="resetBombe()" style="background:#455a64">RESET MOTOR (AAA)</button>
+            <button onclick="clearLogs()" style="background:#263238">CLEAR LOGS</button>
         </div>
     </div>
 
 <script>
-    // --- TAB NAVIGATION ---
-    function switchTab(tab) {
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active'));
-        if(tab === 'cracker') {
-            document.querySelectorAll('.tab-btn')[0].classList.add('active', 'cyan');
-            document.getElementById('view-cracker').classList.add('active');
-        } else {
-            document.querySelectorAll('.tab-btn')[1].classList.add('active', 'green');
-            document.getElementById('view-enigma').classList.add('active');
-        }
-    }
-
-    // --- ENIGMA ENGINE ---
     const alpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    const rotors = ["EKMFLGDQVZNTOWYHXUSPAIBRCJ", "AJDKSIRUXBLHWTMCQGZNPYFVOE", "BDFHJLCPRTXVZNYEIWGAKMUSQO"];
-    const reflector = "YRUHQSLDPXNGOKMIEBFZCWVJAT";
-    let pos = [0, 0, 0];
+    const rotors = [
+        "EKMFLGDQVZNTOWYHXUSPAIBRCJ", // Rotor I
+        "AJDKSIRUXBLHWTMCQGZNPYFVOE", // Rotor II
+        "BDFHJLCPRTXVZNYEIWGAKMUSQO"  // Rotor III
+    ];
+    const reflector = "YRUHQSLDPXNGOKMIEBFZCWVJAT"; // Reflector B
 
-    function initEnigma() {
-        const board = document.getElementById('lamp-board');
-        board.innerHTML = '';
-        alpha.split('').forEach(char => {
-            board.innerHTML += `<div class="lamp" id="lamp-${char}">${char}</div>`;
-        });
-        updateRotorUI();
+    let isRunning = false;
+    let p = [0, 0, 0]; // Rotor starting indices (0=A, 1=B, etc.)
+    let scanTimer = null;
+
+    function init() {
+        const grid = document.getElementById('drum-grid');
+        grid.innerHTML = '';
+        for (let i = 0; i < 36; i++) {
+            grid.innerHTML += `
+                <div class="drum-unit" id="drum-${i}">
+                    <span class="drum-val">${alpha[p[i % 3]]}</span>
+                </div>`;
+        }
+        updateUI();
     }
 
-    function stepRotorManual(idx) {
-        pos[idx] = (pos[idx] + 1) % 26;
-        updateRotorUI();
-    }
+    // Exact Enigma M3 Encryption Matching the Engineering Lab Site
+    function enigmaTransform(char, startPos) {
+        let pos = [...startPos];
 
-    function updateRotorUI() {
-        document.getElementById('r0').innerText = alpha[pos[0]];
-        document.getElementById('r1').innerText = alpha[pos[1]];
-        document.getElementById('r2').innerText = alpha[pos[2]];
-    }
-
-    function encryptChar(char) {
-        // Step rightmost rotor
+        // Step Rotors
         pos[2] = (pos[2] + 1) % 26;
         if (pos[2] === 17) {
             pos[1] = (pos[1] + 1) % 26;
-            if (pos[1] === 17) pos[0] = (pos[0] + 1) % 26;
+            if (pos[1] === 17) {
+                pos[0] = (pos[0] + 1) % 26;
+            }
         }
-        updateRotorUI();
 
         let idx = alpha.indexOf(char);
-        // Forward through rotors
+
+        // Forward Pass (Rotor III -> II -> I)
         for (let i = 2; i >= 0; i--) {
             idx = (idx + pos[i]) % 26;
             idx = alpha.indexOf(rotors[i][idx]);
             idx = (idx - pos[i] + 26) % 26;
         }
-        // Reflector
+
+        // Reflector B
         idx = alpha.indexOf(reflector[idx]);
-        // Return through rotors
+
+        // Return Pass (Rotor I -> II -> III)
         for (let i = 0; i <= 2; i++) {
             idx = (idx + pos[i]) % 26;
             idx = rotors[i].indexOf(alpha[idx]);
             idx = (idx - pos[i] + 26) % 26;
         }
+
         return alpha[idx];
     }
 
-    window.addEventListener('keydown', (e) => {
-        if (!document.getElementById('view-enigma').classList.contains('active')) return;
-        const char = e.key.toUpperCase();
-        if (alpha.includes(char) && char.length === 1) {
-            document.querySelectorAll('.lamp').forEach(l => l.classList.remove('lit'));
-            const out = encryptChar(char);
-            document.getElementById(`lamp-${out}`).classList.add('lit');
-            document.getElementById('plain-tape').innerText += char;
-            document.getElementById('cipher-tape').innerText += out;
-        }
-    });
-
-    // --- PASSWORD CRACKER ENGINE ---
-    function calcEntropy(pass) {
-        let pool = 0;
-        if (/[a-z]/.test(pass)) pool += 26;
-        if (/[A-Z]/.test(pass)) pool += 26;
-        if (/[0-9]/.test(pass)) pool += 10;
-        if (/[^a-zA-Z0-9]/.test(pass)) pool += 32;
-        return Math.round(pass.length * (Math.log2(pool || 1)));
-    }
-
-    function startCracker() {
-        const pass = document.getElementById('target-pass').value;
-        const speed = parseFloat(document.getElementById('hardware-profile').value);
-        const term = document.getElementById('term-out');
-        const crackBtn = document.getElementById('crack-btn');
-
-        if (!pass) return;
-
-        const entropy = calcEntropy(pass);
-        const totalCombinations = Math.pow(2, entropy);
-        const seconds = totalCombinations / speed;
-
-        document.getElementById('entropy-stat').innerText = `${entropy} Bits`;
-        
-        // Format time
-        let timeStr = "";
-        if (seconds < 1) timeStr = `${(seconds * 1000).toFixed(2)} Milliseconds`;
-        else if (seconds < 60) timeStr = `${seconds.toFixed(2)} Seconds`;
-        else if (seconds < 3600) timeStr = `${(seconds / 60).toFixed(2)} Minutes`;
-        else if (seconds < 86400) timeStr = `${(seconds / 3600).toFixed(2)} Hours`;
-        else if (seconds < 31536000) timeStr = `${(seconds / 86400).toFixed(2)} Days`;
-        else timeStr = `${(seconds / 31536000).toFixed(2)} Years`;
-
-        document.getElementById('time-stat').innerText = timeStr;
-
-        // Terminal animation
-        term.innerHTML = `> INITIALIZING ATTACK VECTOR...\n> Target: "${pass}"\n> Key Space: 2^${entropy} combinations\n> Attack Rate: ${(speed/1e6).toFixed(1)}M hashes/sec\n---------------------------------\n`;
-        
-        crackBtn.disabled = true;
-        let count = 0;
-        const interval = setInterval(() => {
-            count++;
-            const randHex = Math.random().toString(16).substring(2, 10);
-            term.innerHTML += `> testing hash [0x${randHex}] -> REJECTED\n`;
-            term.scrollTop = term.scrollHeight;
-
-            if (count >= 6) {
-                clearInterval(interval);
-                term.innerHTML += `---------------------------------\n> [SUCCESS] Target key space exhausted.\n> CRACK COMPLETE in ${timeStr}.`;
-                term.scrollTop = term.scrollHeight;
-                crackBtn.disabled = false;
+    function testString(text, startPos) {
+        let currentPos = [...startPos];
+        let result = "";
+        for (let i = 0; i < text.length; i++) {
+            let resChar = enigmaTransform(text[i], currentPos);
+            result += resChar;
+            // Advance internal rotor states for subsequent characters
+            currentPos[2] = (currentPos[2] + 1) % 26;
+            if (currentPos[2] === 17) {
+                currentPos[1] = (currentPos[1] + 1) % 26;
+                if (currentPos[1] === 17) {
+                    currentPos[0] = (currentPos[0] + 1) % 26;
+                }
             }
-        }, 150);
+        }
+        return result;
     }
 
-    // Initialize
-    initEnigma();
+    function toggleBombe() {
+        if (isRunning) {
+            stopBombe();
+        } else {
+            startBombe();
+        }
+    }
+
+    function startBombe() {
+        const cipher = document.getElementById('cipher-in').value.toUpperCase().replace(/[^A-Z]/g, "");
+        const crib = document.getElementById('crib-in').value.toUpperCase().replace(/[^A-Z]/g, "");
+
+        if (!cipher || !crib) {
+            alert("Please enter both an Intercepted Cipher and an English Crib!");
+            return;
+        }
+
+        if (cipher.length !== crib.length) {
+            log("> WARNING: Cipher and Crib lengths differ. Testing substring crib alignment...");
+        }
+
+        isRunning = true;
+        document.getElementById('run-btn').innerText = "STOP MOTOR";
+        document.getElementById('stop-lamp').classList.remove('hit');
+        log(`> BOMBE MOTOR STARTED.\n> SCANNING ROTOR POSITIONS (17,576 KEYS)...`);
+
+        runScanBatch();
+    }
+
+    function stopBombe() {
+        isRunning = false;
+        clearTimeout(scanTimer);
+        document.getElementById('run-btn').innerText = "RUN BOMBE MOTOR";
+        log("> MOTOR STOPPED BY OPERATOR.");
+    }
+
+    function runScanBatch() {
+        if (!isRunning) return;
+
+        const cipher = document.getElementById('cipher-in').value.toUpperCase().replace(/[^A-Z]/g, "");
+        const crib = document.getElementById('crib-in').value.toUpperCase().replace(/[^A-Z]/g, "");
+
+        // Process a batch of 150 combinations per frame to keep visual updates smooth
+        let iterations = 0;
+        let matchFound = false;
+
+        while (iterations < 150 && isRunning) {
+            let testResult = testString(crib, p);
+
+            if (testResult === cipher) {
+                matchFound = true;
+                break;
+            }
+
+            // Increment rotor positions: R -> M -> L
+            p[2]++;
+            if (p[2] >= 26) {
+                p[2] = 0;
+                p[1]++;
+                if (p[1] >= 26) {
+                    p[1] = 0;
+                    p[0]++;
+                    if (p[0] >= 26) {
+                        // Entire key space searched
+                        updateUI();
+                        stopBombe();
+                        log("> SCAN COMPLETE: NO MATCHING ROTOR SETTING FOUND.");
+                        return;
+                    }
+                }
+            }
+            iterations++;
+        }
+
+        updateUI();
+
+        if (matchFound) {
+            isRunning = false;
+            document.getElementById('run-btn').innerText = "RUN BOMBE MOTOR";
+            document.getElementById('stop-lamp').classList.add('hit');
+            
+            let posStr = p.map(x => alpha[x]).join(" ");
+            log(`\n*** CONTRADICTION HIT DETECTED ***\n> SETTING FOUND AT ROTORS: [ ${posStr} ]`);
+            
+            let decrypted = testString(cipher, p);
+            document.getElementById('output-tape').innerText = decrypted;
+        } else {
+            scanTimer = setTimeout(runScanBatch, 10);
+        }
+    }
+
+    function stepOnePosition() {
+        p[2]++;
+        if (p[2] >= 26) { p[2] = 0; p[1]++; }
+        if (p[1] >= 26) { p[1] = 0; p[0]++; }
+        if (p[0] >= 26) { p = [0, 0, 0]; }
+        updateUI();
+    }
+
+    function resetBombe() {
+        stopBombe();
+        p = [0, 0, 0];
+        document.getElementById('stop-lamp').classList.remove('hit');
+        document.getElementById('output-tape').innerText = "WAITING...";
+        updateUI();
+        log("> RESET ROTOR SETTINGS TO AAA.");
+    }
+
+    function updateUI() {
+        const posStr = p.map(x => alpha[x]).join(" ");
+        document.getElementById('odo-display').innerText = posStr;
+
+        for (let i = 0; i < 36; i++) {
+            const drum = document.getElementById(`drum-${i}`);
+            const valSpan = drum.querySelector('.drum-val');
+            const letter = alpha[p[i % 3]];
+            valSpan.innerText = letter;
+            
+            // Visual rotation effect
+            const rotDeg = p[i % 3] * 13.84;
+            drum.style.transform = `rotate(${rotDeg}deg)`;
+            valSpan.style.transform = `rotate(-${rotDeg}deg)`;
+        }
+    }
+
+    function log(msg) {
+        const box = document.getElementById('logic-box');
+        box.innerText = msg + "\n" + box.innerText;
+    }
+
+    function clearLogs() {
+        document.getElementById('logic-box').innerText = "> LOGS CLEARED. STANDBY...";
+    }
 </script>
 </body>
 </html>
