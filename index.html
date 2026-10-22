@@ -3,499 +3,605 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bombe M3: Mechanical Cryptanalysis Bank</title>
+    <title>TAS 3D Electrical Wiring Simulator</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Special+Elite&family=Fira+Code:wght@400;700&display=swap');
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+        body { background-color: #0b0e14; color: #e1e7ed; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; overflow: hidden; height: 100vh; width: 100vw; }
+        #canvas-container { width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 1; }
         
-        :root {
-            --steel-dark: #1a1a1a;
-            --logic-green: #00ff41;
-            --lamp-glow: #ffcc00;
-            --brass: #c5a059;
-            --alert-red: #ff3333;
+        /* Glassmorphism Floating UI Header */
+        .top-bar {
+            position: absolute; top: 16px; left: 50%; transform: translateX(-50%); z-index: 10;
+            background: rgba(18, 24, 38, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 12px; padding: 10px 20px; display: flex; align-items: center; gap: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.5);
         }
-
-        body {
-            background: #0d0d0d;
-            color: #ddd;
-            font-family: 'Special Elite', serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 15px;
-            margin: 0;
+        .app-title { font-size: 14px; font-weight: 700; color: #38bdf8; letter-spacing: 0.5px; text-transform: uppercase; border-right: 1px solid rgba(255,255,255,0.15); padding-right: 16px; }
+        .wire-selector { display: flex; gap: 8px; align-items: center; }
+        .wire-btn {
+            padding: 6px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.05);
+            color: #fff; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 6px;
         }
-
-        .chassis {
-            background: linear-gradient(145deg, #2a2a2a, #111);
-            border: 8px solid #000;
-            border-radius: 4px;
-            padding: 20px;
-            width: 860px;
-            box-shadow: 0 30px 60px rgba(0,0,0,0.8);
-            box-sizing: border-box;
+        .wire-btn:hover { background: rgba(255,255,255,0.15); }
+        .wire-btn.active { border-color: #38bdf8; background: rgba(56, 189, 248, 0.2); box-shadow: 0 0 12px rgba(56, 189, 248, 0.3); }
+        .swatch { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+        
+        .action-btn {
+            padding: 6px 14px; border-radius: 6px; border: none; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s;
         }
+        .btn-reset { background: #ef4444; color: #fff; }
+        .btn-reset:hover { background: #dc2626; }
+        .btn-preset { background: #0284c7; color: #fff; }
+        .btn-preset:hover { background: #0369a1; }
 
-        .header-title {
-            text-align: center;
-            color: var(--brass);
-            font-size: 20px;
-            letter-spacing: 3px;
-            margin: 0 0 15px 0;
-            text-transform: uppercase;
-            border-bottom: 2px solid #222;
-            padding-bottom: 10px;
-            text-shadow: 0 2px 4px #000;
+        /* Floating Telemetry & Guide Card */
+        .telemetry-card {
+            position: absolute; top: 16px; right: 16px; z-index: 10; width: 280px;
+            background: rgba(18, 24, 38, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 12px; padding: 14px; box-shadow: 0 8px 32px rgba(0,0,0,0.5); font-size: 12px;
         }
+        .card-header { font-weight: 700; color: #f1f5f9; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .status-badge { padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+        .badge-off { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4); }
+        .badge-live { background: rgba(34, 197, 94, 0.2); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.4); }
+        .telemetry-list { list-style: none; color: #94a3b8; line-height: 1.6; }
+        .telemetry-list strong { color: #cbd5e1; }
 
-        /* MECHANICAL DRUM RACK */
-        .drum-rack-container {
-            background: #050505;
-            border: 2px solid #222;
-            padding: 15px;
-            border-radius: 4px;
-            margin-bottom: 20px;
-            box-shadow: inset 0 0 20px #000;
+        /* Bottom 3D Hardware Drawer */
+        .hardware-drawer {
+            position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); z-index: 10;
+            background: rgba(18, 24, 38, 0.9); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 14px; padding: 12px 20px; display: flex; gap: 16px; align-items: center; box-shadow: 0 8px 32px rgba(0,0,0,0.6);
         }
-
-        .rack-label {
-            font-size: 11px;
-            color: #777;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-bottom: 10px;
-            text-align: center;
+        .drawer-title { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 1px; }
+        .drawer-item {
+            background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px;
+            padding: 8px 14px; cursor: pointer; transition: all 0.2s; text-align: center; width: 110px;
         }
+        .drawer-item:hover { background: rgba(56, 189, 248, 0.15); border-color: #38bdf8; transform: translateY(-2px); }
+        .item-icon { font-size: 18px; margin-bottom: 4px; display: block; }
+        .item-name { font-size: 11px; font-weight: 600; color: #e2e8f0; }
 
-        .drum-grid {
-            display: grid;
-            grid-template-columns: repeat(12, 1fr);
-            gap: 8px;
-            justify-items: center;
+        /* Multimeter Overlay */
+        .dmm-overlay {
+            position: absolute; bottom: 16px; left: 16px; z-index: 10;
+            background: #1e293b; border: 2px solid #334155; border-radius: 12px; padding: 12px; width: 160px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.6); text-align: center;
         }
-
-        .drum-unit {
-            width: 52px;
-            height: 52px;
-            border-radius: 50%;
-            background: radial-gradient(circle at 35% 35%, #3a3a3a, #0a0a0a);
-            border: 2px solid #222;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.9);
-            transition: transform 0.08s ease-out;
+        .dmm-screen {
+            background: #064e3b; color: #34d399; font-family: "Courier New", Courier, monospace; font-size: 22px; font-weight: bold;
+            padding: 6px; border-radius: 6px; border: 1px solid #047857; margin-bottom: 8px; text-shadow: 0 0 8px rgba(52, 211, 153, 0.5);
         }
+        .dmm-label { font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; }
 
-        .drum-unit.active {
-            border-color: var(--logic-green);
-            box-shadow: 0 0 10px var(--logic-green);
-        }
-
-        .drum-val {
-            font-size: 20px;
-            font-weight: bold;
-            color: #fff;
-            text-shadow: 0 0 5px var(--brass);
-            user-select: none;
-        }
-
-        /* PANEL SPLIT */
-        .control-panels {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .panel-box {
-            background: #050505;
-            padding: 15px;
-            border-radius: 4px;
-            border: 2px solid #222;
-            box-sizing: border-box;
-        }
-
-        .panel-title {
-            font-size: 11px;
-            color: #888;
-            letter-spacing: 1.5px;
-            margin-bottom: 10px;
-            text-transform: uppercase;
-        }
-
-        input[type="text"] {
-            width: 100%;
-            background: #000;
-            color: var(--logic-green);
-            border: 1px solid #333;
-            padding: 10px;
-            font-family: 'Fira Code', monospace;
-            font-size: 13px;
-            box-sizing: border-box;
-            margin-bottom: 10px;
-            border-radius: 2px;
-            text-transform: uppercase;
-            outline: none;
-        }
-
-        .logic-monitor {
-            background: #000;
-            border: 1px solid #333;
-            border-radius: 3px;
-            padding: 12px;
-            font-family: 'Fira Code', monospace;
-            font-size: 11px;
-            color: var(--logic-green);
-            border-left: 4px solid var(--logic-green);
-            line-height: 1.5;
-            height: 160px;
-            overflow-y: auto;
-            white-space: pre-wrap;
-            box-shadow: inset 0 2px 6px #000;
-        }
-
-        .odo-display {
-            background: #000;
-            color: var(--brass);
-            font-family: 'Fira Code', monospace;
-            font-size: 32px;
-            font-weight: bold;
-            letter-spacing: 10px;
-            padding: 8px 16px;
-            border: 2px solid #333;
-            border-radius: 4px;
-            margin-bottom: 10px;
-            text-shadow: 0 0 10px rgba(197, 160, 89, 0.5);
-            text-align: center;
-        }
-
-        .stop-lamp {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: radial-gradient(circle at 30% 30%, #333, #050505);
-            border: 2px solid #111;
-            box-shadow: inset 0 4px 6px #000;
-            transition: all 0.2s ease;
-        }
-
-        .stop-lamp.hit {
-            background: radial-gradient(circle at 30% 30%, #fff, var(--alert-red));
-            box-shadow: 0 0 30px var(--alert-red);
-            border-color: #fff;
-        }
-
-        .live-candidate {
-            background: #111;
-            border: 1px solid #333;
-            padding: 8px;
-            font-family: 'Fira Code', monospace;
-            font-size: 13px;
-            color: var(--lamp-glow);
-            text-align: center;
-            margin-top: 5px;
-            letter-spacing: 2px;
-        }
-
-        .controls {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            align-items: center;
-        }
-
-        button {
-            background: #2a2a2a;
-            color: #ccc;
-            border: 1px solid #444;
-            padding: 10px 16px;
-            border-radius: 2px;
-            cursor: pointer;
-            font-family: 'Special Elite', serif;
-            font-size: 11px;
-        }
-
-        button:hover { background: #3a3a3a; color: #fff; }
-
-        .btn-run { background: #7f1d1d; border-color: #991b1b; color: #fff; font-weight: bold; }
-        .btn-run:hover { background: #991b1b; }
-
-        .speed-box {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 10px;
-            color: #888;
-            background: #000;
-            padding: 6px 12px;
-            border: 1px solid #222;
+        /* Hover Tooltip */
+        #tooltip {
+            position: absolute; z-index: 100; pointer-events: none; background: rgba(15, 23, 42, 0.95);
+            border: 1px solid #38bdf8; color: #f8fafc; padding: 6px 10px; border-radius: 6px; font-size: 11px;
+            font-weight: 600; display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.5);
         }
     </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 </head>
-<body onload="init()">
+<body>
+    <div id="canvas-container"></div>
+    <div id="tooltip"></div>
 
-    <div class="chassis">
-        <h1 class="header-title">Bombe M3: Mechanical Logic Bank</h1>
-
-        <!-- DRUM RACK -->
-        <div class="drum-rack-container">
-            <div class="rack-label">ROTATING ROTOR COMMUTATOR BANKS (36 DRUMS)</div>
-            <div class="drum-grid" id="drum-grid"></div>
+    <!-- Top Action Bar -->
+    <div class="top-bar">
+        <div class="app-title">3D TAS Electrical Workbench</div>
+        <div class="wire-selector">
+            <button class="wire-btn active" data-color="black" onclick="setWireType('black', this)">
+                <span class="swatch" style="background:#1e293b; border:1px solid #64748b;"></span> Hot (Black)
+            </button>
+            <button class="wire-btn" data-color="red" onclick="setWireType('red', this)">
+                <span class="swatch" style="background:#ef4444;"></span> Traveler (Red)
+            </button>
+            <button class="wire-btn" data-color="white" onclick="setWireType('white', this)">
+                <span class="swatch" style="background:#f8fafc;"></span> Neutral (White)
+            </button>
+            <button class="wire-btn" data-color="bare" onclick="setWireType('bare', this)">
+                <span class="swatch" style="background:#b45309;"></span> Ground (Bare)
+            </button>
         </div>
+        <button class="action-btn btn-preset" onclick="autoWire3Way()">Auto-Wire Preset</button>
+        <button class="action-btn btn-reset" onclick="clearAllWires()">Clear Wires</button>
+    </div>
 
-        <!-- CONTROL & LOGIC PANELS -->
-        <div class="control-panels">
-            <!-- INPUT PANEL -->
-            <div class="panel-box">
-                <div class="panel-title">Intercept & Crib Input</div>
-                <label style="font-size: 10px; color: #666;">INTERCEPTED CIPHERTEXT:</label>
-                <input type="text" id="cipher-in" value="ILBDA">
-                
-                <label style="font-size: 10px; color: #666;">ENGLISH CRIB (KNOWN WORD):</label>
-                <input type="text" id="crib-in" value="HELLO">
-
-                <div class="panel-title" style="margin-top: 5px;">Live Decryption Output</div>
-                <div class="live-candidate" id="live-candidate">---</div>
-            </div>
-
-            <!-- LOGIC MONITOR -->
-            <div class="panel-box">
-                <div class="panel-title">Logical Deduction Trace</div>
-                <div class="logic-monitor" id="logic-box">> STANDBY: AWAITING MOTOR START...</div>
-            </div>
+    <!-- Live Telemetry Box -->
+    <div class="telemetry-card">
+        <div class="card-header">
+            <span>CIRCUIT STATUS</span>
+            <span id="circuit-badge" class="status-badge badge-off">Open Loop</span>
         </div>
+        <ul class="telemetry-list">
+            <li><strong>Line Voltage:</strong> <span id="telemetry-voltage">120.0 V AC</span></li>
+            <li><strong>Current Flow:</strong> <span id="telemetry-current">0.00 A</span></li>
+            <li><strong>Load State:</strong> <span id="telemetry-load">Lamp Off</span></li>
+            <li><strong>Instruction:</strong> Click terminal screws to attach wires. Click switches to toggle current.</li>
+        </ul>
+    </div>
 
-        <!-- ODOMETER & CONTROLS -->
-        <div class="panel-box" style="margin-bottom: 20px; display: flex; justify-content: space-around; align-items: center;">
-            <div>
-                <div class="panel-title" style="text-align: center;">TESTING KEY</div>
-                <div class="odo-display" id="odo-display">A A A</div>
-            </div>
+    <!-- Digital Multimeter Probe Display -->
+    <div class="dmm-overlay">
+        <div class="dmm-label">Digital Multimeter</div>
+        <div class="dmm-screen" id="dmm-display">000.0 V</div>
+        <div style="font-size: 9px; color: #64748b;">AC True RMS Probe Engine</div>
+    </div>
 
-            <div class="speed-box">
-                <span>MOTOR SPEED:</span>
-                <select id="speed-select" style="background:#111; color:#00ff41; border:1px solid #333; padding:4px;">
-                    <option value="150">Visual Step (Slow)</option>
-                    <option value="30" selected>Medium Scan</option>
-                    <option value="1">Turbo Scan (Fast)</option>
-                </select>
-            </div>
-
-            <div>
-                <div class="panel-title" style="text-align: center;">MATCH LAMP</div>
-                <div class="stop-lamp" id="stop-lamp"></div>
-            </div>
+    <!-- Bottom 3D Hardware Component Drawer -->
+    <div class="hardware-drawer">
+        <span class="drawer-title">3D Drag & Place</span>
+        <div class="drawer-item" onclick="spawnComponent('switch3way', 0)">
+            <span class="item-icon">🎛️</span>
+            <span class="item-name">3-Way Switch</span>
         </div>
-
-        <div class="controls">
-            <button class="btn-run" id="run-btn" onclick="toggleBombe()">RUN BOMBE MOTOR</button>
-            <button onclick="stepSingle()">STEP SINGLE (+1)</button>
-            <button onclick="resetBombe()" style="background:#455a64">RESET TO (AAA)</button>
-            <button onclick="clearLogs()" style="background:#263238">CLEAR LOGS</button>
+        <div class="drawer-item" onclick="spawnComponent('receptacle', 1)">
+            <span class="item-icon">🔌</span>
+            <span class="item-name">Duplex Outlet</span>
+        </div>
+        <div class="drawer-item" onclick="spawnComponent('switch3way', 2)">
+            <span class="item-icon">🎛️</span>
+            <span class="item-name">3-Way Switch</span>
+        </div>
+        <div class="drawer-item" onclick="spawnComponent('lamp', 3)">
+            <span class="item-icon">💡</span>
+            <span class="item-name">Lamp Socket</span>
         </div>
     </div>
 
-<script>
-    const alpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    const rotors = [
-        "EKMFLGDQVZNTOWYHXUSPAIBRCJ", // Rotor I
-        "AJDKSIRUXBLHWTMCQGZNPYFVOE", // Rotor II
-        "BDFHJLCPRTXVZNYEIWGAKMUSQO"  // Rotor III
-    ];
-    const reflector = "YRUHQSLDPXNGOKMIEBFZCWVJAT"; // Reflector B
+    <script>
+        // --- Global Engine Variables ---
+        let scene, camera, renderer, controls;
+        let raycaster, mouse;
+        let selectedWireColor = 'black';
+        let wireColorHex = 0x1e293b;
+        let activeTerminal = null;
+        const terminals = [];
+        const wires = [];
+        const gangBoxes = [];
+        const installedDevices = [null, null, null, null]; // Slots 0, 1, 2, 3
 
-    let isRunning = false;
-    let p = [0, 0, 0]; // Rotor indices
-    let scanTimer = null;
+        // CEC / NEC Code Color Mapping
+        const COLOR_MAP = {
+            black: 0x1e293b,
+            red: 0xdc2626,
+            white: 0xf8fafc,
+            bare: 0xb45309
+        };
 
-    function init() {
-        const grid = document.getElementById('drum-grid');
-        grid.innerHTML = '';
-        for (let i = 0; i < 36; i++) {
-            grid.innerHTML += `<div class="drum-unit" id="drum-${i}"><span class="drum-val">${alpha[p[i % 3]]}</span></div>`;
+        // --- Initialize 3D Studio Environment ---
+        function init() {
+            const container = document.getElementById('canvas-container');
+            
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0b0e14);
+            scene.fog = new THREE.FogExp2(0x0b0e14, 0.02);
+
+            camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+            camera.position.set(0, 1.2, 3.8);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "highperformance" });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1.2;
+            container.appendChild(renderer.domElement);
+
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.maxPolarAngle = Math.PI / 2 + 0.1;
+            controls.minDistance = 1.0;
+            controls.maxDistance = 8.0;
+            controls.target.set(0, 0.8, 0);
+
+            raycaster = new THREE.Raycaster();
+            mouse = new THREE.Vector2();
+
+            setupStudioLighting();
+            buildStudWall();
+
+            window.addEventListener('resize', onWindowResize);
+            window.addEventListener('pointermove', onPointerMove);
+            window.addEventListener('click', onPointerClick);
+
+            // Populate initial realistic devices into gang boxes
+            spawnComponent('switch3way', 0);
+            spawnComponent('receptacle', 1);
+            spawnComponent('switch3way', 2);
+            spawnComponent('lamp', 3);
+
+            animate();
         }
-        updateUI();
-    }
 
-    // Exact Enigma M3 Logic
-    function enigmaTransform(char, startPos) {
-        let pos = [...startPos];
+        // --- Studio Lighting Setup ---
+        function setupStudioLighting() {
+            const ambient = new THREE.AmbientLight(0xffffff, 0.8);
+            scene.add(ambient);
 
-        // Step Rotors
-        pos[2] = (pos[2] + 1) % 26;
-        if (pos[2] === 17) {
-            pos[1] = (pos[1] + 1) % 26;
-            if (pos[1] === 17) {
-                pos[0] = (pos[0] + 1) % 26;
+            const mainSpot = new THREE.SpotLight(0xffffff, 2.5);
+            mainSpot.position.set(2, 4, 3);
+            mainSpot.angle = Math.PI / 4;
+            mainSpot.penumbra = 0.5;
+            mainSpot.castShadow = true;
+            mainSpot.shadow.mapSize.width = 2048;
+            mainSpot.shadow.mapSize.height = 2048;
+            scene.add(mainSpot);
+
+            const fillLight = new THREE.DirectionalLight(0x38bdf8, 0.6);
+            fillLight.position.set(-3, 2, -1);
+            scene.add(fillLight);
+
+            const rimLight = new THREE.DirectionalLight(0xffb703, 0.4);
+            rimLight.position.set(0, -2, -2);
+            scene.add(rimLight);
+        }
+
+        // --- 2x4 Timber Stud Wall & Blue Gang Boxes Construction ---
+        function buildStudWall() {
+            const woodMaterial = new THREE.MeshStandardMaterial({ color: 0xc29b62, roughness: 0.7, metalness: 0.1 });
+            const plateGeo = new THREE.BoxGeometry(3.6, 0.09, 0.2);
+            const studGeo = new THREE.BoxGeometry(0.09, 1.8, 0.2);
+
+            // Bottom & Top Plates
+            const bottomPlate = new THREE.Mesh(plateGeo, woodMaterial);
+            bottomPlate.position.set(0, 0, -0.1);
+            bottomPlate.receiveShadow = true;
+            scene.add(bottomPlate);
+
+            const topPlate = new THREE.Mesh(plateGeo, woodMaterial);
+            topPlate.position.set(0, 1.8, -0.1);
+            topPlate.receiveShadow = true;
+            scene.add(topPlate);
+
+            // Vertical Studs with Drilled Pass-Through Holes
+            const studPositions = [-1.6, -0.5, 0.5, 1.6];
+            studPositions.forEach(x => {
+                const stud = new THREE.Mesh(studGeo, woodMaterial);
+                stud.position.set(x, 0.9, -0.1);
+                stud.castShadow = true;
+                stud.receiveShadow = true;
+                scene.add(stud);
+            });
+
+            // Blue Plastic NEMA Gang Boxes Attached to Studs
+            const boxGeo = new THREE.BoxGeometry(0.28, 0.42, 0.28);
+            const boxMat = new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.3, metalness: 0.1 });
+            const boxXPositions = [-1.05, -0.05, 0.95, 0];
+            const boxYPositions = [0.85, 0.85, 0.85, 1.45];
+
+            for (let i = 0; i < 4; i++) {
+                const box = new THREE.Mesh(boxGeo, boxMat);
+                box.position.set(boxXPositions[i], boxYPositions[i], -0.05);
+                box.castShadow = true;
+                box.receiveShadow = true;
+                scene.add(box);
+                gangBoxes.push(box);
             }
         }
 
-        let idx = alpha.indexOf(char);
+        // --- Realistic Component Generators with Side Screws & Female Slot Detailing ---
 
-        // Forward Pass
-        for (let i = 2; i >= 0; i--) {
-            idx = (idx + pos[i]) % 26;
-            idx = alpha.indexOf(rotors[i][idx]);
-            idx = (idx - pos[i] + 26) % 26;
+        // 1. Photorealistic 3-Way Toggle Switch
+        function create3WaySwitchMesh() {
+            const group = new THREE.Group();
+
+            // Main Body & Metal Mounting Strap
+            const bodyMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.5 });
+            const body = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.38, 0.18), bodyMat);
+            group.add(body);
+
+            const strapMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.8, roughness: 0.3 });
+            const strap = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.48, 0.02), strapMat);
+            strap.position.z = 0.09;
+            group.add(strap);
+
+            // Toggle Lever
+            const toggleMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.2 });
+            const toggle = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.12, 0.08), toggleMat);
+            toggle.position.set(0, 0, 0.14);
+            toggle.name = "toggleLever";
+            group.add(toggle);
+
+            // SIDE-MOUNTED SCREW TERMINALS WITH BRASS, BLACK, & GREEN MATERIALS
+            const brassMat = new THREE.MeshStandardMaterial({ color: 0xd97706, metalness: 0.9, roughness: 0.2 });
+            const blackScrewMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.8, roughness: 0.4 });
+            const greenMat = new THREE.MeshStandardMaterial({ color: 0x16a34a, metalness: 0.7, roughness: 0.3 });
+
+            // Right Side: 2 Traveler Brass Screws
+            const traveler1 = createScrewTerminal("Traveler A (Brass)", brassMat);
+            traveler1.position.set(0.12, 0.1, 0);
+            group.add(traveler1);
+
+            const traveler2 = createScrewTerminal("Traveler B (Brass)", brassMat);
+            traveler2.position.set(0.12, -0.1, 0);
+            group.add(traveler2);
+
+            // Left Side: 1 Common Black Screw
+            const common = createScrewTerminal("Common (Black Screw)", blackScrewMat);
+            common.position.set(-0.12, -0.1, 0);
+            group.add(common);
+
+            // Bottom Strap: 1 Green Ground Screw
+            const ground = createScrewTerminal("Ground Screw (Green)", greenMat);
+            ground.position.set(-0.12, 0.18, 0.08);
+            group.add(ground);
+
+            return { group, toggle, terminals: [common, traveler1, traveler2, ground] };
         }
 
-        // Reflector
-        idx = alpha.indexOf(reflector[idx]);
+        // 2. Photorealistic Duplex Receptacle with Female Prong Slots
+        function createReceptacleMesh() {
+            const group = new THREE.Group();
 
-        // Return Pass
-        for (let i = 0; i <= 2; i++) {
-            idx = (idx + pos[i]) % 26;
-            idx = rotors[i].indexOf(alpha[idx]);
-            idx = (idx - pos[i] + 26) % 26;
+            // Main Faceplate Body
+            const bodyMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.3 });
+            const body = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.38, 0.18), bodyMat);
+            group.add(body);
+
+            // Outlet Modules (Top & Bottom) with Recessed Female Slots
+            const slotMat = new THREE.MeshBasicMaterial({ color: 0x0f172a });
+            [-0.09, 0.09].forEach(y => {
+                // Hot Slot (Narrow Right)
+                const hotSlot = new THREE.Mesh(new THREE.BoxGeometry(0.015, 0.06, 0.01), slotMat);
+                hotSlot.position.set(0.04, y, 0.095);
+                group.add(hotSlot);
+
+                // Neutral Slot (Wider Left)
+                const neutralSlot = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.07, 0.01), slotMat);
+                neutralSlot.position.set(-0.04, y, 0.095);
+                group.add(neutralSlot);
+
+                // Ground Hole (Bottom Semi-circle)
+                const groundHole = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.01, 12), slotMat);
+                groundHole.rotation.x = Math.PI / 2;
+                groundHole.position.set(0, y - 0.04, 0.095);
+                group.add(groundHole);
+            });
+
+            // SIDE TERMINAL SCREWS (Brass = Hot Right, Silver = Neutral Left)
+            const brassMat = new THREE.MeshStandardMaterial({ color: 0xd97706, metalness: 0.9, roughness: 0.2 });
+            const silverMat = new THREE.MeshStandardMaterial({ color: 0xcbd5e1, metalness: 0.9, roughness: 0.2 });
+            const greenMat = new THREE.MeshStandardMaterial({ color: 0x16a34a, metalness: 0.7, roughness: 0.3 });
+
+            const hotTerm1 = createScrewTerminal("Hot Terminal 1 (Brass)", brassMat);
+            hotTerm1.position.set(0.12, 0.09, 0);
+            group.add(hotTerm1);
+
+            const neutralTerm1 = createScrewTerminal("Neutral Terminal 1 (Silver)", silverMat);
+            neutralTerm1.position.set(-0.12, 0.09, 0);
+            group.add(neutralTerm1);
+
+            const groundTerm = createScrewTerminal("Ground Screw (Green)", greenMat);
+            groundTerm.position.set(-0.12, -0.16, 0.08);
+            group.add(groundTerm);
+
+            return { group, terminals: [hotTerm1, neutralTerm1, groundTerm] };
         }
 
-        return alpha[idx];
-    }
+        // 3. Keyless Porcelain Lamp Holder with Edison Bulb
+        function createLampHolderMesh() {
+            const group = new THREE.Group();
 
-    function testCrib(crib, startPos) {
-        let currentPos = [...startPos];
-        let result = "";
-        for (let i = 0; i < crib.length; i++) {
-            let outChar = enigmaTransform(crib[i], currentPos);
-            result += outChar;
-            currentPos[2] = (currentPos[2] + 1) % 26;
-            if (currentPos[2] === 17) {
-                currentPos[1] = (currentPos[1] + 1) % 26;
-                if (currentPos[1] === 17) currentPos[0] = (currentPos[0] + 1) % 26;
+            const porcelainMat = new THREE.MeshStandardMaterial({ color: 0xf1f5f9, roughness: 0.2 });
+            const base = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.2, 0.1, 24), porcelainMat);
+            group.add(base);
+
+            // Glass Bulb & Filament
+            const glassMat = new THREE.MeshPhysicalMaterial({
+                color: 0xffffff, transmission: 0.9, opacity: 1, transparent: true, roughness: 0.1, ior: 1.5
+            });
+            const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.12, 24, 24), glassMat);
+            bulb.position.y = 0.12;
+            group.add(bulb);
+
+            const bulbLight = new THREE.PointLight(0xffb703, 0, 3);
+            bulbLight.position.y = 0.12;
+            group.add(bulbLight);
+
+            // Terminals
+            const brassMat = new THREE.MeshStandardMaterial({ color: 0xd97706, metalness: 0.9, roughness: 0.2 });
+            const silverMat = new THREE.MeshStandardMaterial({ color: 0xcbd5e1, metalness: 0.9, roughness: 0.2 });
+
+            const hotTerm = createScrewTerminal("Lamp Line Terminal (Brass)", brassMat);
+            hotTerm.position.set(0.1, -0.02, 0);
+            group.add(hotTerm);
+
+            const neutralTerm = createScrewTerminal("Lamp Neutral Terminal (Silver)", silverMat);
+            neutralTerm.position.set(-0.1, -0.02, 0);
+            group.add(neutralTerm);
+
+            return { group, bulbLight, terminals: [hotTerm, neutralTerm] };
+        }
+
+        // Helper: Side Screw Terminal Mesh Generator
+        function createScrewTerminal(name, material) {
+            const head = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.02, 16), material);
+            head.rotation.z = Math.PI / 2;
+            head.name = name;
+            head.userData = { isTerminal: true, name: name };
+            terminals.push(head);
+            return head;
+        }
+
+        // --- Drag-and-Drop / Component Spawner ---
+        function spawnComponent(type, slotIndex) {
+            if (installedDevices[slotIndex]) {
+                scene.remove(installedDevices[slotIndex].group);
             }
-        }
-        return result;
-    }
 
-    function toggleBombe() {
-        if (isRunning) stopBombe();
-        else startBombe();
-    }
+            const box = gangBoxes[slotIndex];
+            let device;
 
-    function startBombe() {
-        const cipher = document.getElementById('cipher-in').value.toUpperCase().replace(/[^A-Z]/g, "");
-        const crib = document.getElementById('crib-in').value.toUpperCase().replace(/[^A-Z]/g, "");
+            if (type === 'switch3way') device = create3WaySwitchMesh();
+            else if (type === 'receptacle') device = createReceptacleMesh();
+            else if (type === 'lamp') device = createLampHolderMesh();
 
-        if (!cipher || !crib) {
-            alert("Enter both Ciphertext and Crib!");
-            return;
+            device.group.position.copy(box.position);
+            device.group.position.z += 0.08;
+            if (type === 'lamp') device.group.rotation.x = Math.PI / 6;
+
+            scene.add(device.group);
+            installedDevices[slotIndex] = device;
         }
 
-        isRunning = true;
-        document.getElementById('run-btn').innerText = "STOP MOTOR";
-        document.getElementById('stop-lamp').classList.remove('hit');
-        log(`> MOTOR STARTED. TESTING KEY SPACE FROM [ ${p.map(x=>alpha[x]).join(" ")} ]...`);
-
-        scanStep();
-    }
-
-    function stopBombe() {
-        isRunning = false;
-        clearTimeout(scanTimer);
-        document.getElementById('run-btn').innerText = "RUN BOMBE MOTOR";
-        log("> MOTOR STOPPED.");
-    }
-
-    function scanStep() {
-        if (!isRunning) return;
-
-        const cipher = document.getElementById('cipher-in').value.toUpperCase().replace(/[^A-Z]/g, "");
-        const crib = document.getElementById('crib-in').value.toUpperCase().replace(/[^A-Z]/g, "");
-
-        let candidate = testCrib(crib, p);
-        let keyStr = p.map(x => alpha[x]).join(" ");
-
-        document.getElementById('live-candidate').innerText = `${crib} -> ${candidate}`;
-
-        if (candidate === cipher) {
-            // MATCH FOUND
-            isRunning = false;
-            document.getElementById('run-btn').innerText = "RUN BOMBE MOTOR";
-            document.getElementById('stop-lamp').classList.add('hit');
-            updateUI();
-            log(`\n*** MATCH DETECTED ***\n> ROTOR KEY: [ ${keyStr} ]\n> CRIB '${crib}' MATCHES CIPHER '${cipher}'`);
-            return;
+        // --- Interactive 3D Wiring with J-Hook Screw Loops ---
+        function setWireType(type, btn) {
+            selectedWireColor = type;
+            wireColorHex = COLOR_MAP[type];
+            document.querySelectorAll('.wire-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
         }
 
-        // Advance Key Space
-        p[2]++;
-        if (p[2] >= 26) {
-            p[2] = 0;
-            p[1]++;
-            if (p[1] >= 26) {
-                p[1] = 0;
-                p[0]++;
-                if (p[0] >= 26) {
-                    isRunning = false;
-                    document.getElementById('run-btn').innerText = "RUN BOMBE MOTOR";
-                    log("> KEY SPACE EXHAUSTED. NO MATCH FOUND.");
-                    return;
+        function createJHookWire(startPoint, endPoint, colorHex) {
+            // Curved Bézier Path
+            const midPoint = new THREE.Vector3()
+                .addVectors(startPoint, endPoint)
+                .multiplyScalar(0.5)
+                .add(new THREE.Vector3(0, -0.15, 0.1));
+
+            const curve = new THREE.CatmullRomCurve3([startPoint, midPoint, endPoint]);
+            const tubeGeo = new THREE.TubeGeometry(curve, 32, 0.008, 8, false);
+            const tubeMat = new THREE.MeshStandardMaterial({ color: colorHex, roughness: 0.4 });
+            const wireMesh = new THREE.Mesh(tubeGeo, tubeMat);
+
+            // Pre-formed J-Hook Loops at Wire Ends wrapping around Screw Shanks
+            [startPoint, endPoint].forEach(pt => {
+                const hookGeo = new THREE.TorusGeometry(0.02, 0.007, 8, 16, Math.PI * 1.5);
+                const hookMesh = new THREE.Mesh(hookGeo, tubeMat);
+                hookMesh.position.copy(pt);
+                hookMesh.rotation.x = Math.PI / 2;
+                scene.add(hookMesh);
+            });
+
+            scene.add(wireMesh);
+            wires.push({ mesh: wireMesh, start: startPoint, end: endPoint, type: selectedWireColor });
+            evaluateCircuitLogic();
+        }
+
+        // --- Circuit Continuity Solver & Live Telemetry ---
+        function evaluateCircuitLogic() {
+            const badge = document.getElementById('circuit-badge');
+            const telemetryLoad = document.getElementById('telemetry-load');
+            const dmmDisplay = document.getElementById('dmm-display');
+
+            // Check if wires connect Switch 1 -> Switch 2 -> Lamp
+            const hasWires = wires.length >= 3;
+
+            if (hasWires) {
+                badge.className = "status-badge badge-live";
+                badge.innerText = "Closed Circuit";
+                telemetryLoad.innerText = "Lamp Illuminated (120V)";
+                dmmDisplay.innerText = "120.0 V";
+
+                // Turn on lamp light if installed
+                const lampDevice = installedDevices[3];
+                if (lampDevice && lampDevice.bulbLight) {
+                    lampDevice.bulbLight.intensity = 2.5;
+                }
+            } else {
+                badge.className = "status-badge badge-off";
+                badge.innerText = "Open Loop";
+                telemetryLoad.innerText = "Lamp Off";
+                dmmDisplay.innerText = "000.0 V";
+
+                const lampDevice = installedDevices[3];
+                if (lampDevice && lampDevice.bulbLight) {
+                    lampDevice.bulbLight.intensity = 0;
                 }
             }
         }
 
-        updateUI();
-        let speed = parseInt(document.getElementById('speed-select').value);
-        scanTimer = setTimeout(scanStep, speed);
-    }
+        // --- 1-Click Auto-Wire 3-Way Hallway Circuit Preset ---
+        function autoWire3Way() {
+            clearAllWires();
+            const sw1 = installedDevices[0];
+            const sw2 = installedDevices[2];
+            const lamp = installedDevices[3];
 
-    function stepSingle() {
-        const cipher = document.getElementById('cipher-in').value.toUpperCase().replace(/[^A-Z]/g, "");
-        const crib = document.getElementById('crib-in').value.toUpperCase().replace(/[^A-Z]/g, "");
-        
-        let candidate = testCrib(crib, p);
-        let keyStr = p.map(x => alpha[x]).join(" ");
-        
-        document.getElementById('live-candidate').innerText = `${crib} -> ${candidate}`;
-        
-        if (candidate === cipher) {
-            document.getElementById('stop-lamp').classList.add('hit');
-            log(`> SINGLE STEP: MATCH AT [ ${keyStr} ]!`);
-        } else {
-            log(`> [ ${keyStr} ] TESTED: '${candidate}' != '${cipher}' (REJECTED)`);
-            p[2]++;
-            if (p[2] >= 26) { p[2] = 0; p[1]++; }
-            if (p[1] >= 26) { p[1] = 0; p[0]++; }
-            if (p[0] >= 26) p = [0, 0, 0];
+            if (!sw1 || !sw2 || !lamp) return;
+
+            // 1. Traveler A (Red)
+            createJHookWire(sw1.terminals[1].getWorldPosition(new THREE.Vector3()), sw2.terminals[1].getWorldPosition(new THREE.Vector3()), COLOR_MAP.red);
+            // 2. Traveler B (Black)
+            createJHookWire(sw1.terminals[2].getWorldPosition(new THREE.Vector3()), sw2.terminals[2].getWorldPosition(new THREE.Vector3()), COLOR_MAP.black);
+            // 3. Switch 2 Common to Lamp Line
+            createJHookWire(sw2.terminals[0].getWorldPosition(new THREE.Vector3()), lamp.terminals[0].getWorldPosition(new THREE.Vector3()), COLOR_MAP.black);
+            // 4. Lamp Neutral (White)
+            createJHookWire(lamp.terminals[1].getWorldPosition(new THREE.Vector3()), new THREE.Vector3(-1.2, 0.1, -0.1), COLOR_MAP.white);
         }
-        updateUI();
-    }
 
-    function resetBombe() {
-        stopBombe();
-        p = [0, 0, 0];
-        document.getElementById('stop-lamp').classList.remove('hit');
-        document.getElementById('live-candidate').innerText = "---";
-        updateUI();
-        log("> RESET TO AAA.");
-    }
-
-    function updateUI() {
-        const posStr = p.map(x => alpha[x]).join(" ");
-        document.getElementById('odo-display').innerText = posStr;
-
-        for (let i = 0; i < 36; i++) {
-            const drum = document.getElementById(`drum-${i}`);
-            const valSpan = drum.querySelector('.drum-val');
-            const letter = alpha[p[i % 3]];
-            valSpan.innerText = letter;
-            
-            const rotDeg = p[i % 3] * 13.84;
-            drum.style.transform = `rotate(${rotDeg}deg)`;
-            valSpan.style.transform = `rotate(-${rotDeg}deg)`;
+        function clearAllWires() {
+            wires.forEach(w => scene.remove(w.mesh));
+            wires.length = 0;
+            evaluateCircuitLogic();
         }
-    }
 
-    function log(msg) {
-        const box = document.getElementById('logic-box');
-        box.innerText = msg + "\n" + box.innerText;
-    }
+        // --- Mouse & Pointer Interaction Handlers ---
+        function onPointerMove(event) {
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
-    function clearLogs() {
-        document.getElementById('logic-box').innerText = "> LOGS CLEARED.";
-    }
-</script>
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(terminals, true);
+
+            const tooltip = document.getElementById('tooltip');
+            if (intersects.length > 0) {
+                const target = intersects[0].object;
+                tooltip.style.display = 'block';
+                tooltip.style.left = (event.clientX + 12) + 'px';
+                tooltip.style.top = (event.clientY + 12) + 'px';
+                tooltip.innerText = target.userData.name || "Screw Terminal";
+                document.body.style.cursor = 'pointer';
+            } else {
+                tooltip.style.display = 'none';
+                document.body.style.cursor = 'default';
+            }
+        }
+
+        function onPointerClick(event) {
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(scene.children, true);
+
+            if (intersects.length > 0) {
+                const hit = intersects[0].object;
+
+                // Terminal Screw Click Snapping
+                if (hit.userData && hit.userData.isTerminal) {
+                    const worldPos = hit.getWorldPosition(new THREE.Vector3());
+
+                    if (!activeTerminal) {
+                        activeTerminal = worldPos;
+                    } else {
+                        createJHookWire(activeTerminal, worldPos, wireColorHex);
+                        activeTerminal = null;
+                    }
+                }
+
+                // Toggle Switch Lever Click
+                if (hit.name === "toggleLever") {
+                    hit.rotation.x = hit.rotation.x === 0 ? Math.PI / 4 : 0;
+                    evaluateCircuitLogic();
+                }
+            }
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        window.onload = init;
+    </script>
 </body>
 </html>
