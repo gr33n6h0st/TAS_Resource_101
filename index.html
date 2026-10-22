@@ -31,9 +31,8 @@
             border: 8px solid #000;
             border-radius: 4px;
             padding: 20px;
-            width: 840px;
+            width: 860px;
             box-shadow: 0 30px 60px rgba(0,0,0,0.8);
-            position: relative;
             box-sizing: border-box;
         }
 
@@ -86,17 +85,12 @@
             justify-content: center;
             position: relative;
             box-shadow: 0 4px 8px rgba(0,0,0,0.9);
-            transition: transform 0.05s linear;
+            transition: transform 0.08s ease-out;
         }
 
-        .drum-unit::before {
-            content: "";
-            position: absolute;
-            width: 42px;
-            height: 42px;
-            border-radius: 50%;
-            border: 1px dashed #444;
-            pointer-events: none;
+        .drum-unit.active {
+            border-color: var(--logic-green);
+            box-shadow: 0 0 10px var(--logic-green);
         }
 
         .drum-val {
@@ -146,11 +140,6 @@
             outline: none;
         }
 
-        input[type="text"]:focus {
-            border-color: var(--logic-green);
-        }
-
-        /* LOGIC MONITOR */
         .logic-monitor {
             background: #000;
             border: 1px solid #333;
@@ -161,42 +150,33 @@
             color: var(--logic-green);
             border-left: 4px solid var(--logic-green);
             line-height: 1.5;
-            height: 140px;
+            height: 160px;
             overflow-y: auto;
             white-space: pre-wrap;
             box-shadow: inset 0 2px 6px #000;
-        }
-
-        /* ODOMETER & STATUS */
-        .status-bay {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
         }
 
         .odo-display {
             background: #000;
             color: var(--brass);
             font-family: 'Fira Code', monospace;
-            font-size: 36px;
+            font-size: 32px;
             font-weight: bold;
-            letter-spacing: 12px;
-            padding: 8px 20px;
+            letter-spacing: 10px;
+            padding: 8px 16px;
             border: 2px solid #333;
             border-radius: 4px;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             text-shadow: 0 0 10px rgba(197, 160, 89, 0.5);
-            box-shadow: inset 0 2px 8px #000;
+            text-align: center;
         }
 
         .stop-lamp {
-            width: 42px;
-            height: 42px;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
             background: radial-gradient(circle at 30% 30%, #333, #050505);
             border: 2px solid #111;
-            margin-bottom: 12px;
             box-shadow: inset 0 4px 6px #000;
             transition: all 0.2s ease;
         }
@@ -207,56 +187,50 @@
             border-color: #fff;
         }
 
-        /* TAPE READOUT */
-        .tape-readout {
-            background: #fdfae6;
-            color: #222;
-            padding: 8px 12px;
-            font-size: 15px;
-            letter-spacing: 3px;
-            border-radius: 2px;
-            min-height: 20px;
-            text-align: left;
-            margin-bottom: 15px;
-            border-left: 6px solid #34495e;
-            box-shadow: inset 0 2px 5px rgba(0,0,0,0.2);
-            font-family: 'Special Elite', serif;
-            word-break: break-all;
+        .live-candidate {
+            background: #111;
+            border: 1px solid #333;
+            padding: 8px;
+            font-family: 'Fira Code', monospace;
+            font-size: 13px;
+            color: var(--lamp-glow);
+            text-align: center;
+            margin-top: 5px;
+            letter-spacing: 2px;
         }
 
-        /* CONTROLS */
         .controls {
             display: flex;
             justify-content: center;
             gap: 10px;
+            align-items: center;
         }
 
         button {
             background: #2a2a2a;
             color: #ccc;
             border: 1px solid #444;
-            padding: 10px 18px;
+            padding: 10px 16px;
             border-radius: 2px;
             cursor: pointer;
             font-family: 'Special Elite', serif;
             font-size: 11px;
-            transition: background 0.15s ease;
         }
 
-        button:hover {
-            background: #3a3a3a;
-            color: #fff;
-        }
+        button:hover { background: #3a3a3a; color: #fff; }
 
-        .btn-run {
-            background: #7f1d1d;
-            border-color: #991b1b;
-            color: #fff;
-            font-weight: bold;
-        }
+        .btn-run { background: #7f1d1d; border-color: #991b1b; color: #fff; font-weight: bold; }
+        .btn-run:hover { background: #991b1b; }
 
-        .btn-run:hover {
-            background: #991b1b;
+        .speed-box {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 10px;
+            color: #888;
+            background: #000;
+            padding: 6px 12px;
+            border: 1px solid #222;
         }
     </style>
 </head>
@@ -277,39 +251,48 @@
             <div class="panel-box">
                 <div class="panel-title">Intercept & Crib Input</div>
                 <label style="font-size: 10px; color: #666;">INTERCEPTED CIPHERTEXT:</label>
-                <input type="text" id="cipher-in" placeholder="e.g. ILBDA" value="ILBDA">
+                <input type="text" id="cipher-in" value="ILBDA">
                 
                 <label style="font-size: 10px; color: #666;">ENGLISH CRIB (KNOWN WORD):</label>
-                <input type="text" id="crib-in" placeholder="e.g. HELLO" value="HELLO">
+                <input type="text" id="crib-in" value="HELLO">
 
-                <div class="panel-title" style="margin-top: 5px;">Decrypted Message Tape</div>
-                <div id="output-tape" class="tape-readout" style="border-left-color: #b08d57;">WAITING...</div>
+                <div class="panel-title" style="margin-top: 5px;">Live Decryption Output</div>
+                <div class="live-candidate" id="live-candidate">---</div>
             </div>
 
-            <!-- LOGIC MONITOR & STATUS -->
-            <div class="panel-box style="display: flex; flex-direction: column;">
+            <!-- LOGIC MONITOR -->
+            <div class="panel-box">
                 <div class="panel-title">Logical Deduction Trace</div>
-                <div class="logic-monitor" id="logic-box">> STANDBY: AWAITING MOTOR START COMMAND...</div>
+                <div class="logic-monitor" id="logic-box">> STANDBY: AWAITING MOTOR START...</div>
             </div>
         </div>
 
-        <!-- MOTOR STATUS & BUTTONS -->
+        <!-- ODOMETER & CONTROLS -->
         <div class="panel-box" style="margin-bottom: 20px; display: flex; justify-content: space-around; align-items: center;">
-            <div class="status-bay">
-                <div class="panel-title">CURRENT ROTOR POSITION</div>
+            <div>
+                <div class="panel-title" style="text-align: center;">TESTING KEY</div>
                 <div class="odo-display" id="odo-display">A A A</div>
             </div>
 
-            <div class="status-bay">
-                <div class="panel-title">CONTRADICTION STOP LAMP</div>
+            <div class="speed-box">
+                <span>MOTOR SPEED:</span>
+                <select id="speed-select" style="background:#111; color:#00ff41; border:1px solid #333; padding:4px;">
+                    <option value="150">Visual Step (Slow)</option>
+                    <option value="30" selected>Medium Scan</option>
+                    <option value="1">Turbo Scan (Fast)</option>
+                </select>
+            </div>
+
+            <div>
+                <div class="panel-title" style="text-align: center;">MATCH LAMP</div>
                 <div class="stop-lamp" id="stop-lamp"></div>
             </div>
         </div>
 
         <div class="controls">
             <button class="btn-run" id="run-btn" onclick="toggleBombe()">RUN BOMBE MOTOR</button>
-            <button onclick="stepOnePosition()">STEP SINGLE (+1)</button>
-            <button onclick="resetBombe()" style="background:#455a64">RESET MOTOR (AAA)</button>
+            <button onclick="stepSingle()">STEP SINGLE (+1)</button>
+            <button onclick="resetBombe()" style="background:#455a64">RESET TO (AAA)</button>
             <button onclick="clearLogs()" style="background:#263238">CLEAR LOGS</button>
         </div>
     </div>
@@ -324,22 +307,19 @@
     const reflector = "YRUHQSLDPXNGOKMIEBFZCWVJAT"; // Reflector B
 
     let isRunning = false;
-    let p = [0, 0, 0]; // Rotor starting indices (0=A, 1=B, etc.)
+    let p = [0, 0, 0]; // Rotor indices
     let scanTimer = null;
 
     function init() {
         const grid = document.getElementById('drum-grid');
         grid.innerHTML = '';
         for (let i = 0; i < 36; i++) {
-            grid.innerHTML += `
-                <div class="drum-unit" id="drum-${i}">
-                    <span class="drum-val">${alpha[p[i % 3]]}</span>
-                </div>`;
+            grid.innerHTML += `<div class="drum-unit" id="drum-${i}"><span class="drum-val">${alpha[p[i % 3]]}</span></div>`;
         }
         updateUI();
     }
 
-    // Exact Enigma M3 Encryption Matching the Engineering Lab Site
+    // Exact Enigma M3 Logic
     function enigmaTransform(char, startPos) {
         let pos = [...startPos];
 
@@ -354,17 +334,17 @@
 
         let idx = alpha.indexOf(char);
 
-        // Forward Pass (Rotor III -> II -> I)
+        // Forward Pass
         for (let i = 2; i >= 0; i--) {
             idx = (idx + pos[i]) % 26;
             idx = alpha.indexOf(rotors[i][idx]);
             idx = (idx - pos[i] + 26) % 26;
         }
 
-        // Reflector B
+        // Reflector
         idx = alpha.indexOf(reflector[idx]);
 
-        // Return Pass (Rotor I -> II -> III)
+        // Return Pass
         for (let i = 0; i <= 2; i++) {
             idx = (idx + pos[i]) % 26;
             idx = rotors[i].indexOf(alpha[idx]);
@@ -374,30 +354,24 @@
         return alpha[idx];
     }
 
-    function testString(text, startPos) {
+    function testCrib(crib, startPos) {
         let currentPos = [...startPos];
         let result = "";
-        for (let i = 0; i < text.length; i++) {
-            let resChar = enigmaTransform(text[i], currentPos);
-            result += resChar;
-            // Advance internal rotor states for subsequent characters
+        for (let i = 0; i < crib.length; i++) {
+            let outChar = enigmaTransform(crib[i], currentPos);
+            result += outChar;
             currentPos[2] = (currentPos[2] + 1) % 26;
             if (currentPos[2] === 17) {
                 currentPos[1] = (currentPos[1] + 1) % 26;
-                if (currentPos[1] === 17) {
-                    currentPos[0] = (currentPos[0] + 1) % 26;
-                }
+                if (currentPos[1] === 17) currentPos[0] = (currentPos[0] + 1) % 26;
             }
         }
         return result;
     }
 
     function toggleBombe() {
-        if (isRunning) {
-            stopBombe();
-        } else {
-            startBombe();
-        }
+        if (isRunning) stopBombe();
+        else startBombe();
     }
 
     function startBombe() {
@@ -405,89 +379,87 @@
         const crib = document.getElementById('crib-in').value.toUpperCase().replace(/[^A-Z]/g, "");
 
         if (!cipher || !crib) {
-            alert("Please enter both an Intercepted Cipher and an English Crib!");
+            alert("Enter both Ciphertext and Crib!");
             return;
-        }
-
-        if (cipher.length !== crib.length) {
-            log("> WARNING: Cipher and Crib lengths differ. Testing substring crib alignment...");
         }
 
         isRunning = true;
         document.getElementById('run-btn').innerText = "STOP MOTOR";
         document.getElementById('stop-lamp').classList.remove('hit');
-        log(`> BOMBE MOTOR STARTED.\n> SCANNING ROTOR POSITIONS (17,576 KEYS)...`);
+        log(`> MOTOR STARTED. TESTING KEY SPACE FROM [ ${p.map(x=>alpha[x]).join(" ")} ]...`);
 
-        runScanBatch();
+        scanStep();
     }
 
     function stopBombe() {
         isRunning = false;
         clearTimeout(scanTimer);
         document.getElementById('run-btn').innerText = "RUN BOMBE MOTOR";
-        log("> MOTOR STOPPED BY OPERATOR.");
+        log("> MOTOR STOPPED.");
     }
 
-    function runScanBatch() {
+    function scanStep() {
         if (!isRunning) return;
 
         const cipher = document.getElementById('cipher-in').value.toUpperCase().replace(/[^A-Z]/g, "");
         const crib = document.getElementById('crib-in').value.toUpperCase().replace(/[^A-Z]/g, "");
 
-        // Process a batch of 150 combinations per frame to keep visual updates smooth
-        let iterations = 0;
-        let matchFound = false;
+        let candidate = testCrib(crib, p);
+        let keyStr = p.map(x => alpha[x]).join(" ");
 
-        while (iterations < 150 && isRunning) {
-            let testResult = testString(crib, p);
+        document.getElementById('live-candidate').innerText = `${crib} -> ${candidate}`;
 
-            if (testResult === cipher) {
-                matchFound = true;
-                break;
-            }
-
-            // Increment rotor positions: R -> M -> L
-            p[2]++;
-            if (p[2] >= 26) {
-                p[2] = 0;
-                p[1]++;
-                if (p[1] >= 26) {
-                    p[1] = 0;
-                    p[0]++;
-                    if (p[0] >= 26) {
-                        // Entire key space searched
-                        updateUI();
-                        stopBombe();
-                        log("> SCAN COMPLETE: NO MATCHING ROTOR SETTING FOUND.");
-                        return;
-                    }
-                }
-            }
-            iterations++;
-        }
-
-        updateUI();
-
-        if (matchFound) {
+        if (candidate === cipher) {
+            // MATCH FOUND
             isRunning = false;
             document.getElementById('run-btn').innerText = "RUN BOMBE MOTOR";
             document.getElementById('stop-lamp').classList.add('hit');
-            
-            let posStr = p.map(x => alpha[x]).join(" ");
-            log(`\n*** CONTRADICTION HIT DETECTED ***\n> SETTING FOUND AT ROTORS: [ ${posStr} ]`);
-            
-            let decrypted = testString(cipher, p);
-            document.getElementById('output-tape').innerText = decrypted;
-        } else {
-            scanTimer = setTimeout(runScanBatch, 10);
+            updateUI();
+            log(`\n*** MATCH DETECTED ***\n> ROTOR KEY: [ ${keyStr} ]\n> CRIB '${crib}' MATCHES CIPHER '${cipher}'`);
+            return;
         }
+
+        // Advance Key Space
+        p[2]++;
+        if (p[2] >= 26) {
+            p[2] = 0;
+            p[1]++;
+            if (p[1] >= 26) {
+                p[1] = 0;
+                p[0]++;
+                if (p[0] >= 26) {
+                    isRunning = false;
+                    document.getElementById('run-btn').innerText = "RUN BOMBE MOTOR";
+                    log("> KEY SPACE EXHAUSTED. NO MATCH FOUND.");
+                    return;
+                }
+            }
+        }
+
+        updateUI();
+        let speed = parseInt(document.getElementById('speed-select').value);
+        scanTimer = setTimeout(scanStep, speed);
     }
 
-    function stepOnePosition() {
-        p[2]++;
-        if (p[2] >= 26) { p[2] = 0; p[1]++; }
-        if (p[1] >= 26) { p[1] = 0; p[0]++; }
-        if (p[0] >= 26) { p = [0, 0, 0]; }
+    function stepSingle() {
+        const cipher = document.getElementById('cipher-in').value.toUpperCase().replace(/[^A-Z]/g, "");
+        const crib = document.getElementById('crib-in').value.toUpperCase().replace(/[^A-Z]/g, "");
+        
+        let candidate = testCrib(crib, p);
+        let keyStr = p.map(x => alpha[x]).join(" ");
+        
+        document.getElementById('live-candidate').innerText = `${crib} -> ${candidate}`;
+        
+        if (candidate === cipher) {
+            document.getElementById('stop-lamp').classList.add('hit');
+            log(`> SINGLE STEP: MATCH AT [ ${keyStr} ]!`);
+        } else {
+            log(`> [ ${keyStr} ] TESTED: '${candidate}' != '${cipher}' (REJECTED)`);
+            p[2]++;
+            if (p[2] >= 26) { p[2] = 0; p[1]++; }
+            if (p[1] >= 26) { p[1] = 0; p[0]++; }
+            if (p[0] >= 26) p = [0, 0, 0];
+        }
         updateUI();
     }
 
@@ -495,9 +467,9 @@
         stopBombe();
         p = [0, 0, 0];
         document.getElementById('stop-lamp').classList.remove('hit');
-        document.getElementById('output-tape').innerText = "WAITING...";
+        document.getElementById('live-candidate').innerText = "---";
         updateUI();
-        log("> RESET ROTOR SETTINGS TO AAA.");
+        log("> RESET TO AAA.");
     }
 
     function updateUI() {
@@ -510,7 +482,6 @@
             const letter = alpha[p[i % 3]];
             valSpan.innerText = letter;
             
-            // Visual rotation effect
             const rotDeg = p[i % 3] * 13.84;
             drum.style.transform = `rotate(${rotDeg}deg)`;
             valSpan.style.transform = `rotate(-${rotDeg}deg)`;
@@ -523,7 +494,7 @@
     }
 
     function clearLogs() {
-        document.getElementById('logic-box').innerText = "> LOGS CLEARED. STANDBY...";
+        document.getElementById('logic-box').innerText = "> LOGS CLEARED.";
     }
 </script>
 </body>
