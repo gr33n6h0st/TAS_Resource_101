@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CyberLab: Cipher & Cryptanalysis Suite</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600;700&family=Inter:wght@400;600;800&display=swap');
+
+        :root {
+            --bg-dark: #0a0c10;
+            --panel-bg: #12161f;
+            --border-color: #222938;
+            --accent-green: #00ff66;
+            --accent-cyan: #00e5ff;
+            --accent-red: #ff3366;
+            --accent-gold: #ffb700;
+            --text-main: #e2e8f0;
+            --text-muted: #64748b;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        header h1 {
+            font-size: 26px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            color: #fff;
+            text-transform: uppercase;
+        }
+
+        header h1 span { color: var(--accent-cyan); }
+
+        header p {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* TAB NAVIGATION */
+        .tab-nav {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            background: var(--panel-bg);
+            padding: 6px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 10px 20px;
+            font-size: 13px;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .tab-btn.active {
+            background: var(--border-color);
+            color: #fff;
+        }
+
+        .tab-btn.active.green { color: var(--accent-green); }
+        .tab-btn.active.cyan { color: var(--accent-cyan); }
+
+        /* VIEW CONTAINERS */
+        .view-panel {
+            display: none;
+            width: 100%;
+            max-width: 900px;
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+        }
+
+        .view-panel.active { display: block; }
+
+        /* ENIGMA TAB STYLES */
+        .rotor-rack {
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+
+        .rotor-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .rotor-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+        }
+
+        .rotor-dial {
+            width: 60px;
+            height: 75px;
+            background: linear-gradient(180deg, #1e2538 0%, #0d111a 100%);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Fira Code', monospace;
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--accent-gold);
+            cursor: pointer;
+            user-select: none;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
+        }
+
+        .rotor-dial:hover { border-color: var(--accent-gold); }
+
+        .lamp-board {
+            display: grid;
+            grid-template-columns: repeat(9, 1fr);
+            gap: 8px;
+            margin-bottom: 25px;
+        }
+
+        .lamp {
+            aspect-ratio: 1;
+            border-radius: 50%;
+            background: #090c14;
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Fira Code', monospace;
+            font-size: 16px;
+            font-weight: 600;
+            color: #334155;
+            transition: all 0.1s ease;
+        }
+
+        .lamp.lit {
+            background: var(--accent-gold);
+            color: #000;
+            box-shadow: 0 0 20px var(--accent-gold);
+            border-color: #fff;
+        }
+
+        .tape-display {
+            background: #090c14;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 12px;
+            font-family: 'Fira Code', monospace;
+            font-size: 14px;
+            min-height: 45px;
+            margin-bottom: 12px;
+            word-break: break-all;
+        }
+
+        .tape-label {
+            font-size: 10px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-bottom: 4px;
+            font-weight: 700;
+        }
+
+        .tape-text { color: var(--accent-green); }
+
+        /* MODERN CRACKER STYLES */
+        .cracker-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) { .cracker-grid { grid-template-columns: 1fr; } }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .input-group input {
+            background: #090c14;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 12px;
+            color: #fff;
+            font-family: 'Fira Code', monospace;
+            font-size: 15px;
+            outline: none;
+        }
+
+        .input-group input:focus { border-color: var(--accent-cyan); }
+
+        .terminal {
+            background: #05070a;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 15px;
+            font-family: 'Fira Code', monospace;
+            font-size: 12px;
+            color: var(--accent-cyan);
+            height: 220px;
+            overflow-y: auto;
+            line-height: 1.6;
+        }
+
+        .stat-card {
+            background: #090c14;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 12px;
+        }
+
+        .stat-card .val {
+            font-size: 22px;
+            font-weight: 800;
+            font-family: 'Fira Code', monospace;
+            margin-top: 4px;
+        }
+
+        .val.red { color: var(--accent-red); }
+        .val.green { color: var(--accent-green); }
+
+        .btn-action {
+            width: 100%;
+            background: var(--accent-cyan);
+            color: #000;
+            font-weight: 700;
+            border: none;
+            padding: 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: opacity 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .btn-action:hover { opacity: 0.9; }
+        .btn-action:disabled { background: var(--text-muted); cursor: not-allowed; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Cyber<span>Lab</span></h1>
+        <p>Grade 9/10 Technological Education & Encryption Inspector</p>
+    </header>
+
+    <div class="tab-nav">
+        <button class="tab-btn active cyan" onclick="switchTab('cracker')">Modern Password Cracker</button>
+        <button class="tab-btn green" onclick="switchTab('enigma')">Historical Enigma Machine</button>
+    </div>
+
+    <!-- TAB 1: MODERN PASSWORD CRACKER -->
+    <div id="view-cracker" class="view-panel active">
+        <div class="cracker-grid">
+            <div>
+                <div class="input-group">
+                    <label>Target Password / Passphrase</label>
+                    <input type="text" id="target-pass" value="shop2026" placeholder="Enter a password to test...">
+                </div>
+
+                <div class="input-group">
+                    <label>Attack Hardware Profile</label>
+                    <select id="hardware-profile" style="background:#090c14; color:#fff; border:1px solid var(--border-color); padding:12px; border-radius:6px; font-family:'Inter'; outline:none;">
+                        <option value="100000">School Chromebook (100k attempts/sec)</option>
+                        <option value="50000000">Single Gaming GPU (50M attempts/sec)</option>
+                        <option value="10000000000" selected>Dedicated Cyber Rig (10 Billion attempts/sec)</option>
+                    </select>
+                </div>
+
+                <button class="btn-action" id="crack-btn" onclick="startCracker()">Simulate Brute-Force Attack</button>
+            </div>
+
+            <div>
+                <div class="stat-card">
+                    <div class="tape-label">Estimated Time to Crack</div>
+                    <div class="val red" id="time-stat">0.00 Seconds</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="tape-label">Password Entropy</div>
+                    <div class="val green" id="entropy-stat">0 Bits</div>
+                </div>
+
+                <div class="terminal" id="term-out">
+                    > SYSTEM READY. Enter a password above to begin cryptanalysis...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 2: HISTORICAL ENIGMA MACHINE -->
+    <div id="view-enigma" class="view-panel">
+        <div class="rotor-rack">
+            <div class="rotor-box">
+                <div class="rotor-label">Rotor I</div>
+                <div class="rotor-dial" id="r0" onclick="stepRotorManual(0)">A</div>
+            </div>
+            <div class="rotor-box">
+                <div class="rotor-label">Rotor II</div>
+                <div class="rotor-dial" id="r1" onclick="stepRotorManual(1)">A</div>
+            </div>
+            <div class="rotor-box">
+                <div class="rotor-label">Rotor III</div>
+                <div class="rotor-dial" id="r2" onclick="stepRotorManual(2)">A</div>
+            </div>
+        </div>
+
+        <div class="lamp-board" id="lamp-board"></div>
+
+        <div>
+            <div class="tape-label">Plaintext Input (Type on your keyboard)</div>
+            <div class="tape-display"><span class="tape-text" id="plain-tape"></span></div>
+            <div class="tape-label">Enigma Ciphertext Output</div>
+            <div class="tape-display"><span class="tape-text" id="cipher-tape" style="color: var(--accent-gold);"></span></div>
+        </div>
+    </div>
+
+<script>
+    // --- TAB NAVIGATION ---
+    function switchTab(tab) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active'));
+        if(tab === 'cracker') {
+            document.querySelectorAll('.tab-btn')[0].classList.add('active', 'cyan');
+            document.getElementById('view-cracker').classList.add('active');
+        } else {
+            document.querySelectorAll('.tab-btn')[1].classList.add('active', 'green');
+            document.getElementById('view-enigma').classList.add('active');
+        }
+    }
+
+    // --- ENIGMA ENGINE ---
+    const alpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const rotors = ["EKMFLGDQVZNTOWYHXUSPAIBRCJ", "AJDKSIRUXBLHWTMCQGZNPYFVOE", "BDFHJLCPRTXVZNYEIWGAKMUSQO"];
+    const reflector = "YRUHQSLDPXNGOKMIEBFZCWVJAT";
+    let pos = [0, 0, 0];
+
+    function initEnigma() {
+        const board = document.getElementById('lamp-board');
+        board.innerHTML = '';
+        alpha.split('').forEach(char => {
+            board.innerHTML += `<div class="lamp" id="lamp-${char}">${char}</div>`;
+        });
+        updateRotorUI();
+    }
+
+    function stepRotorManual(idx) {
+        pos[idx] = (pos[idx] + 1) % 26;
+        updateRotorUI();
+    }
+
+    function updateRotorUI() {
+        document.getElementById('r0').innerText = alpha[pos[0]];
+        document.getElementById('r1').innerText = alpha[pos[1]];
+        document.getElementById('r2').innerText = alpha[pos[2]];
+    }
+
+    function encryptChar(char) {
+        // Step rightmost rotor
+        pos[2] = (pos[2] + 1) % 26;
+        if (pos[2] === 17) {
+            pos[1] = (pos[1] + 1) % 26;
+            if (pos[1] === 17) pos[0] = (pos[0] + 1) % 26;
+        }
+        updateRotorUI();
+
+        let idx = alpha.indexOf(char);
+        // Forward through rotors
+        for (let i = 2; i >= 0; i--) {
+            idx = (idx + pos[i]) % 26;
+            idx = alpha.indexOf(rotors[i][idx]);
+            idx = (idx - pos[i] + 26) % 26;
+        }
+        // Reflector
+        idx = alpha.indexOf(reflector[idx]);
+        // Return through rotors
+        for (let i = 0; i <= 2; i++) {
+            idx = (idx + pos[i]) % 26;
+            idx = rotors[i].indexOf(alpha[idx]);
+            idx = (idx - pos[i] + 26) % 26;
+        }
+        return alpha[idx];
+    }
+
+    window.addEventListener('keydown', (e) => {
+        if (!document.getElementById('view-enigma').classList.contains('active')) return;
+        const char = e.key.toUpperCase();
+        if (alpha.includes(char) && char.length === 1) {
+            document.querySelectorAll('.lamp').forEach(l => l.classList.remove('lit'));
+            const out = encryptChar(char);
+            document.getElementById(`lamp-${out}`).classList.add('lit');
+            document.getElementById('plain-tape').innerText += char;
+            document.getElementById('cipher-tape').innerText += out;
+        }
+    });
+
+    // --- PASSWORD CRACKER ENGINE ---
+    function calcEntropy(pass) {
+        let pool = 0;
+        if (/[a-z]/.test(pass)) pool += 26;
+        if (/[A-Z]/.test(pass)) pool += 26;
+        if (/[0-9]/.test(pass)) pool += 10;
+        if (/[^a-zA-Z0-9]/.test(pass)) pool += 32;
+        return Math.round(pass.length * (Math.log2(pool || 1)));
+    }
+
+    function startCracker() {
+        const pass = document.getElementById('target-pass').value;
+        const speed = parseFloat(document.getElementById('hardware-profile').value);
+        const term = document.getElementById('term-out');
+        const crackBtn = document.getElementById('crack-btn');
+
+        if (!pass) return;
+
+        const entropy = calcEntropy(pass);
+        const totalCombinations = Math.pow(2, entropy);
+        const seconds = totalCombinations / speed;
+
+        document.getElementById('entropy-stat').innerText = `${entropy} Bits`;
+        
+        // Format time
+        let timeStr = "";
+        if (seconds < 1) timeStr = `${(seconds * 1000).toFixed(2)} Milliseconds`;
+        else if (seconds < 60) timeStr = `${seconds.toFixed(2)} Seconds`;
+        else if (seconds < 3600) timeStr = `${(seconds / 60).toFixed(2)} Minutes`;
+        else if (seconds < 86400) timeStr = `${(seconds / 3600).toFixed(2)} Hours`;
+        else if (seconds < 31536000) timeStr = `${(seconds / 86400).toFixed(2)} Days`;
+        else timeStr = `${(seconds / 31536000).toFixed(2)} Years`;
+
+        document.getElementById('time-stat').innerText = timeStr;
+
+        // Terminal animation
+        term.innerHTML = `> INITIALIZING ATTACK VECTOR...\n> Target: "${pass}"\n> Key Space: 2^${entropy} combinations\n> Attack Rate: ${(speed/1e6).toFixed(1)}M hashes/sec\n---------------------------------\n`;
+        
+        crackBtn.disabled = true;
+        let count = 0;
+        const interval = setInterval(() => {
+            count++;
+            const randHex = Math.random().toString(16).substring(2, 10);
+            term.innerHTML += `> testing hash [0x${randHex}] -> REJECTED\n`;
+            term.scrollTop = term.scrollHeight;
+
+            if (count >= 6) {
+                clearInterval(interval);
+                term.innerHTML += `---------------------------------\n> [SUCCESS] Target key space exhausted.\n> CRACK COMPLETE in ${timeStr}.`;
+                term.scrollTop = term.scrollHeight;
+                crackBtn.disabled = false;
+            }
+        }, 150);
+    }
+
+    // Initialize
+    initEnigma();
+</script>
+</body>
+</html>
